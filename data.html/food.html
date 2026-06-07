@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Food Ordering System</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f0fc04;
+}
+
+nav{
+background:#ea0413;
+color:white;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+}
+
+nav ul{
+display:flex;
+list-style:none;
+gap:20px;
+}
+
+nav a{
+text-decoration:none;
+color:white;
+font-weight:bold;
+}
+
+header{
+text-align:center;
+padding:20px;
+}
+
+.search-box{
+text-align:center;
+margin:20px;
+}
+
+.search-box input{
+padding:10px;
+width:300px;
+max-width:90%;
+}
+
+.container{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:10px;
+box-shadow:0 2px 5px rgba(0,0,0,.2);
+text-align:center;
+}
+
+.card img{
+width:100%;
+height:180px;
+object-fit:cover;
+border-radius:10px;
+}
+
+.card button{
+padding:10px;
+margin:5px;
+border:none;
+background:#d49d06;
+color:white;
+cursor:pointer;
+border-radius:5px;
+}
+
+.card button:hover{
+background:#e64a19;
+}
+
+section{
+padding:20px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+table th,table td{
+border:1px solid #ddd;
+padding:10px;
+text-align:center;
+}
+
+.qty-btn{
+padding:5px 10px;
+margin:2px;
+}
+
+.summary,
+.payment{
+background:white;
+padding:20px;
+margin-top:20px;
+border-radius:10px;
+}
+
+.payment input{
+width:100%;
+padding:10px;
+margin:10px 0;
+}
+
+.payment button,
+.summary button{
+padding:10px 20px;
+background:green;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.6);
+justify-content:center;
+align-items:center;
+}
+
+.modal-content{
+background:white;
+padding:20px;
+width:350px;
+border-radius:10px;
+text-align:center;
+}
+
+.modal-content img{
+width:100%;
+height:200px;
+object-fit:cover;
+}
+
+.close{
+float:right;
+cursor:pointer;
+font-size:20px;
+}
+
+#status{
+margin-top:20px;
+font-size:20px;
+font-weight:bold;
+color:green;
+}
+
+@media(max-width:768px){
+
+nav{
+flex-direction:column;
+gap:10px;
+}
+
+nav ul{
+flex-direction:column;
+text-align:center;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<nav>
+<h2>🍔 FoodHub</h2>
+
+<ul>
+<li><a href="#">Home</a></li>
+<li><a href="#foods">Order Foods</a></li>
+<li><a href="#cartSection">Cart</a></li>
+<li><a href="#paymentSection">Special Menu</a></li>
+</ul>
+</nav>
+
+<header>
+<h1>Online Food Ordering System</h1>
+<p>Order your favorite food online</p>
+</header>
+
+<div class="search-box">
+<input
+type="text"
+id="search"
+placeholder="Search Food..."
+onkeyup="searchFood()">
+</div>
+
+<section id="foods">
+
+<h2>Food Menu</h2>
+
+<div class="container" id="foodContainer">
+</div>
+
+</section>
+
+<section id="cartSection">
+
+<h2>Cart</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Food</th>
+<th>Price</th>
+<th>Quantity</th>
+<th>Total</th>
+</tr>
+</thead>
+
+<tbody id="cartBody">
+</tbody>
+
+</table>
+
+<h3 style="margin-top:20px;">
+Grand Total: ₹<span id="grandTotal">0</span>
+</h3>
+
+<div class="summary">
+
+<h2>Order Summary</h2>
+
+<p>
+Total Amount:
+₹<span id="summaryTotal">0</span>
+</p>
+
+<button onclick="showPayment()">
+Proceed To Payment
+</button>
+
+</div>
+
+</section>
+
+<section id="paymentSection">
+
+<div class="payment">
+
+<h2>Payment Gateway</h2>
+
+<input type="text" placeholder="Card Number">
+
+<input type="text" placeholder="Card Holder Name">
+
+<input type="password" placeholder="CVV">
+
+<button onclick="placeOrder()">
+Place Order
+</button>
+
+<div id="status"></div>
+
+</div>
+
+</section>
+
+<div class="modal" id="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeModal()">
+❌
+</span>
+
+<div id="modalBody">
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const foods = [
+
+{
+id:1,
+name:"Cheese Burger",
+image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500",
+description:"Juicy burger loaded with cheese.",
+price:199,
+rating:4.5
+},
+
+{
+id:2,
+name:"Pizza",
+image:"https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500",
+description:"Italian cheese pizza.",
+price:299,
+rating:4.8
+},
+
+{
+id:3,
+name:"White Sauce Pasta",
+image:"https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=500",
+description:"Creamy delicious pasta.",
+price:249,
+rating:4.4
+},
+
+{
+id:4,
+name:"French Fries",
+image:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500",
+description:"Crispy potato fries.",
+price:149,
+rating:4.2
+},
+
+{
+id:5,
+name:"Sandwich",
+image:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500",
+description:"Healthy vegetable sandwich.",
+price:179,
+rating:4.3
+}
+
+];
+
+let cart =
+JSON.parse(localStorage.getItem("cart")) || [];
+
+const foodContainer =
+document.getElementById("foodContainer");
+
+function displayFoods(data){
+
+foodContainer.innerHTML="";
+
+data.forEach(food=>{
+
+foodContainer.innerHTML += `
+
+<div class="card">
+
+<img src="${food.image}">
+
+<h3>${food.name}</h3>
+
+<p>₹${food.price}</p>
+
+<p>⭐ ${food.rating}</p>
+
+<button onclick="showDetails(${food.id})">
+View Details
+</button>
+
+<button onclick="addToCart(${food.id})">
+Add To Cart
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+displayFoods(foods);
+
+function showDetails(id){
+
+const food =
+foods.find(item=>item.id===id);
+
+document.getElementById("modalBody").innerHTML=`
+
+<img src="${food.image}">
+
+<h2>${food.name}</h2>
+
+<p>${food.description}</p>
+
+<h3>₹${food.price}</h3>
+
+<p>⭐ ${food.rating}</p>
+
+`;
+
+document.getElementById("modal").style.display="flex";
+}
+
+function closeModal(){
+document.getElementById("modal").style.display="none";
+}
+
+function addToCart(id){
+
+const item =
+foods.find(food=>food.id===id);
+
+const existing =
+cart.find(food=>food.id===id);
+
+if(existing){
+existing.quantity++;
+}
+else{
+cart.push({...item,quantity:1});
+}
+
+saveCart();
+updateCart();
+}
+
+function increaseQty(id){
+
+const item=
+cart.find(food=>food.id===id);
+
+item.quantity++;
+
+saveCart();
+updateCart();
+}
+
+function decreaseQty(id){
+
+const item=
+cart.find(food=>food.id===id);
+
+if(item.quantity>1){
+item.quantity--;
+}
+else{
+cart=
+cart.filter(food=>food.id!==id);
+}
+
+saveCart();
+updateCart();
+}
+
+function updateCart(){
+
+const cartBody=
+document.getElementById("cartBody");
+
+cartBody.innerHTML="";
+
+let total=0;
+
+cart.forEach(item=>{
+
+let amount=
+item.price*item.quantity;
+
+total+=amount;
+
+cartBody.innerHTML +=`
+
+<tr>
+
+<td>${item.name}</td>
+
+<td>₹${item.price}</td>
+
+<td>
+
+<button class="qty-btn"
+onclick="decreaseQty(${item.id})">
+-
+</button>
+
+${item.quantity}
+
+<button class="qty-btn"
+onclick="increaseQty(${item.id})">
++
+</button>
+
+</td>
+
+<td>₹${amount}</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("grandTotal")
+.innerText=total;
+
+document.getElementById("summaryTotal")
+.innerText=total;
+}
+
+function saveCart(){
+
+localStorage.setItem(
+"cart",
+JSON.stringify(cart)
+);
+
+}
+
+updateCart();
+
+function searchFood(){
+
+const keyword=
+document.getElementById("search")
+.value.toLowerCase();
+
+const filtered=
+foods.filter(food=>
+food.name.toLowerCase()
+.includes(keyword)
+);
+
+displayFoods(filtered);
+}
+
+function showPayment(){
+
+window.scrollTo({
+top:document.body.scrollHeight,
+behavior:"smooth"
+});
+
+}
+
+function processPayment(){
+
+return new Promise(resolve=>{
+
+setTimeout(()=>{
+
+resolve("Payment Successful");
+
+},3000);
+
+});
+
+}
+
+async function placeOrder(){
+
+if(cart.length===0){
+
+alert("Cart is Empty");
+
+return;
+}
+
+const status=
+document.getElementById("status");
+
+status.innerHTML=
+"⏳ Processing Order...";
+
+const result=
+await processPayment();
+
+const orderId=
+"ORD"+
+Math.floor(Math.random()*100000);
+
+status.innerHTML=`
+
+✅ Order Confirmed
+
+<br><br>
+
+${result}
+
+<br><br>
+
+Order ID:
+<b>${orderId}</b>
+
+<br><br>
+
+Estimated Delivery:
+30-40 Minutes
+
+`;
+
+cart=[];
+
+saveCart();
+
+updateCart();
+
+}
+
+</script>
+
+</body>
+</html>
